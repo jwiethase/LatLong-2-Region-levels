@@ -1,6 +1,6 @@
 rm(list = ls(all=TRUE))
 library(raster)
-library(dplyr)
+library(tidyr)
 library(sp)
 library(rworldmap)
 library(countrycode)
@@ -17,16 +17,17 @@ latlong2regions <- function(data) {
       }
       
       # Get country names from the coordinates, convert to 3 character ISO names
-      data <- data %>% 
+      data <- test %>% 
             # Ensure that coordinates are in numeric format, and are converted to numeric without alteration
             mutate(Longitude = as.numeric(as.character(Longitude)), Latitude = as.numeric(as.character(Latitude))) %>%
-            # Remove all rows with NA values
-            filter(!is.na(Longitude), !is.na(Latitude)) %>% 
+            # Replace NA values with 0, to avoid error in coords2country
+            mutate(Longitude = ifelse(is.na(Longitude), 0, Longitude),
+                   Latitude = ifelse(is.na(Latitude), 0, Latitude)) %>% 
             dplyr::mutate(country = coords2country(.)) %>% 
             dplyr::mutate(ISO3 = countrycode::countrycode(country, "country.name","iso3c"))
       
       # Get spatial polygons for all countries
-      allac2 <- do.call("bind", lapply(as.character(unique(data$ISO3)), 
+      allac2 <- do.call("bind", lapply(as.character(unique(data$ISO3[!is.na(data$ISO3)])), 
                                        function(x) raster::getData('GADM', country=x, level=2)))
 
       # Convert the points to SPDF
@@ -43,13 +44,13 @@ latlong2regions <- function(data) {
             # Rename some columns to make them more readable
             dplyr::rename(Country = NAME_0, County = NAME_1, Region = NAME_2) %>% 
             # Select only necessary columns
-            dplyr::select(Country, County, Region, Longitude, Latitude)
+            dplyr::select(Country, County, Region, Longitude, Latitude) %>% 
+            # Replace zeroes in coordinates with NA
+            dplyr::mutate(Longitude = ifelse(Longitude == 0, NA, Longitude),
+                   Latitude = ifelse(Latitude == 0, NA, Latitude))
       
       # Remove all the downloaded .rds files
       unlink(list.files(pattern = "\\.rds$"))
       
       return(points_with_zones)
 }
-
-test <- read.csv(file.choose())
-new <- latlong2regions(test)
