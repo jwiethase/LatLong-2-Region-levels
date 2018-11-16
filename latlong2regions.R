@@ -46,6 +46,3 @@ latlong2regions <- function(data) {
       
       return(points_with_zones)
 }
-
-test <- read.csv("SampleData.csv")
-new <- latlong2regions(test)
