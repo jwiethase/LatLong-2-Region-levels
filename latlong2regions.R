@@ -4,7 +4,6 @@ library(dplyr)
 library(sp)
 library(rworldmap)
 library(countrycode)
-test <- read.csv("test.csv")
 
 latlong2regions <- function(data) {
       # Make function to derive country name from the coordinates
@@ -40,6 +39,9 @@ latlong2regions <- function(data) {
             dplyr::rename(Country = NAME_0, County = NAME_1, Region = NAME_2) %>% 
             # Select only necessary columns
             dplyr::select(Country, County, Region, Longitude, Latitude)
+      
+      # Remove all the downloaded .rds files
+      base::unlink(list.files(pattern = "\\.rds$"))
             
 }
 
