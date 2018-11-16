@@ -17,7 +17,11 @@ latlong2regions <- function(data) {
       }
       
       # Get country names from the coordinates, convert to 3 character ISO names
-      data <- test %>% 
+      data <- data %>% 
+            # Ensure that coordinates are in numeric format, and are converted to numeric without alteration
+            mutate(Longitude = as.numeric(as.character(Longitude)), Latitude = as.numeric(as.character(Latitude))) %>%
+            # Remove all rows with NA values
+            filter(!is.na(Longitude), !is.na(Latitude)) %>% 
             dplyr::mutate(country = coords2country(.)) %>% 
             dplyr::mutate(ISO3 = countrycode::countrycode(country, "country.name","iso3c"))
       
@@ -46,3 +50,6 @@ latlong2regions <- function(data) {
       
       return(points_with_zones)
 }
+
+test <- read.csv(file.choose())
+new <- latlong2regions(test)
