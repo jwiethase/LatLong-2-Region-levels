@@ -1,6 +1,6 @@
 rm(list = ls(all=TRUE))
 library(raster)
-library(tidyr)
+library(dplyr)
 library(sp)
 library(rworldmap)
 library(countrycode)
@@ -19,9 +19,9 @@ latlong2regions <- function(data) {
       # Get country names from the coordinates, convert to 3 character ISO names
       data <- test %>% 
             # Ensure that coordinates are in numeric format, and are converted to numeric without alteration
-            mutate(Longitude = as.numeric(as.character(Longitude)), Latitude = as.numeric(as.character(Latitude))) %>%
+            dplyr::mutate(Longitude = as.numeric(as.character(Longitude)), Latitude = as.numeric(as.character(Latitude))) %>%
             # Replace NA values with 0, to avoid error in coords2country
-            mutate(Longitude = ifelse(is.na(Longitude), 0, Longitude),
+            dplyr::mutate(Longitude = ifelse(is.na(Longitude), 0, Longitude),
                    Latitude = ifelse(is.na(Latitude), 0, Latitude)) %>% 
             dplyr::mutate(country = coords2country(.)) %>% 
             dplyr::mutate(ISO3 = countrycode::countrycode(country, "country.name","iso3c"))
