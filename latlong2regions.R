@@ -10,7 +10,7 @@ latlong2regions <- function(data) {
       coords2country = function(points)
       {  
             countriesSP <- rworldmap::getMap(resolution='low')
-            pointsSP = SpatialPoints(points, proj4string=CRS(proj4string(countriesSP)))  
+            pointsSP = sp::SpatialPoints(points, proj4string=CRS(proj4string(countriesSP)))  
             indices = sp::over(pointsSP, countriesSP)
             indices$ADMIN  
       }
@@ -18,20 +18,20 @@ latlong2regions <- function(data) {
       # Get country names from the coordinates, convert to 3 character ISO names
       data <- data %>% 
             dplyr::mutate(country = coords2country(.)) %>% 
-            dplyr::mutate(ISO = countrycode(country, "country.name","iso3c"))
+            dplyr::mutate(ISO = countrycode::countrycode(country, "country.name","iso3c"))
       
       # Get spatial polygons for all countries
       allac2 <- do.call("bind", lapply(as.character(unique(data$ISO)), 
                                        function(x) raster::getData('GADM', country=x, level=2)))
 
       # Convert the points to SPDF
-      coordinates(data) <- ~Longitude + Latitude
+      sp::coordinates(data) <- ~Longitude + Latitude
       
       # Assign CRS to 'data', using the allac2 projection
-      proj4string(data) <- proj4string(allac2)
+      sp::proj4string(data) <- sp::proj4string(allac2)
       
       # Retrieve attributes from 'allac2', that are overlaying points in 'data'
-      points_with_zones <- sp::over(data, allac2) %>% 
+      sp::points_with_zones <- sp::over(data, allac2) %>% 
             as.data.frame() %>% 
             # Add coordinates from'data' bnack to the new attribute table
             merge(., as.data.frame(data), by = "ISO") %>% 
@@ -41,7 +41,7 @@ latlong2regions <- function(data) {
             dplyr::select(Country, County, Region, Longitude, Latitude)
       
       # Remove all the downloaded .rds files
-      base::unlink(list.files(pattern = "\\.rds$"))
+      unlink(list.files(pattern = "\\.rds$"))
             
 }
 
